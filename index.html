@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics WebSocket Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .physics-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        #toggle-gravity {
+            transition: all 0.3s ease;
+            border: 2px solid;
+            font-weight: bold;
+            min-width: 140px;
+        }
+
+        #toggle-gravity:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .physics-display {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        #physics-canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #333;
+        }
+
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Physics WebSocket Client</h1>
+
+    <div class="info">
+        <h3>About</h3>
+        <p>This is a WebSocket client for the physics engine integration. It connects to a local WebSocket server and
+            can receive physics updates in real-time.</p>
+        <p><strong>Server:</strong> <code>ws://localhost:8000/ws</code></p>
+        <p><strong>Status:</strong> <span id="connection-status">Connecting...</span></p>
+    </div>
+
+    <div class="container">
+        <h2>Connection Status</h2>
+        <div id="status-display" class="status disconnected">
+            Disconnected from WebSocket server
+        </div>
+
+        <div class="controls">
+            <button id="connect-button">Connect</button>
+            <button id="disconnect-button" disabled>Disconnect</button>
+            <button id="test-button" disabled>Send Test Message</button>
+            <button id="clear-log">Clear Log</button>
+        </div>
+
+        <div class="physics-controls">
+            <button id="add-ball" disabled>Add Ball</button>
+            <button id="reset-simulation" disabled>Reset Simulation</button>
+            <button id="toggle-gravity" disabled>Toggle Gravity</button>
+            <button id="add-random-ball" disabled>Add Random Ball</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Physics Visualization</h2>
+        <canvas id="physics-canvas"
+            style="border: 2px solid #ccc; background: #f5f5f5; display: block; margin: 10px auto;"></canvas>
+        <div id="physics-display" class="physics-display">
+            Waiting for physics data...
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Connection Log</h2>
+        <div id="log-display" class="log">
+            Initializing...
+        </div>
+    </div>
+
+    <script src="client.js"></script>
+    <script>
+        // Additional UI logic
+        function updateConnectionStatus(connected) {
+            const statusDisplay = document.getElementById('status-display');
+            const statusText = document.getElementById('connection-status');
+            const connectBtn = document.getElementById('connect-button');
+            const disconnectBtn = document.getElementById('disconnect-button');
+            const testBtn = document.getElementById('test-button');
+            const addBallBtn = document.getElementById('add-ball');
+            const resetBtn = document.getElementById('reset-simulation');
+            const gravityBtn = document.getElementById('toggle-gravity');
+            const addRandomBallBtn = document.getElementById('add-random-ball');
+
+            if (connected) {
+                statusDisplay.className = 'status connected';
+                statusDisplay.textContent = 'Connected to WebSocket server';
+                statusText.textContent = 'Connected';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+                testBtn.disabled = false;
+                addBallBtn.disabled = false;
+                resetBtn.disabled = false;
+                gravityBtn.disabled = false;
+                addRandomBallBtn.disabled = false;
+            } else {
+                statusDisplay.className = 'status disconnected';
+                statusDisplay.textContent = 'Disconnected from WebSocket server';
+                statusText.textContent = 'Disconnected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                testBtn.disabled = true;
+                addBallBtn.disabled = true;
+                resetBtn.disabled = true;
+                gravityBtn.disabled = true;
+                addRandomBallBtn.disabled = true;
+            }
+        }
+
+        function addLogMessage(message) {
+            const logDisplay = document.getElementById('log-display');
+            const timestamp = new Date().toLocaleTimeString();
+            logDisplay.innerHTML += `[${timestamp}] ${message}\n`;
+            logDisplay.scrollTop = logDisplay.scrollHeight;
+        }
+
+        // Button event listeners
+        document.getElementById('connect-button').addEventListener('click', () => {
+            if (window.physicsClient) {
+                window.physicsClient.connect();
+            }
+        });
+
+        document.getElementById('disconnect-button').addEventListener('click', () => {
+            if (window.physicsClient) {
+                window.physicsClient.disconnect();
+            }
+        });
+
+        document.getElementById('clear-log').addEventListener('click', () => {
+            document.getElementById('log-display').innerHTML = 'Log cleared\n';
+        });
+
+        // Physics control event listeners
+        document.getElementById('add-ball').addEventListener('click', () => {
+            if (window.physicsClient) {
+                const newBall = {
+                    id: `ball${Date.now()}`,
+                    x: Math.random() * 700 + 50,
+                    y: Math.random() * 100 + 50,
+                    velocity: { x: (Math.random() - 0.5) * 4, y: 0 },
+                    mass: Math.random() * 2 + 0.5,
+                    type: 'circle',
+                    radius: Math.random() * 20 + 15
+                };
+                window.physicsClient.addPhysicsObject(newBall);
+            }
+        });
+
+        document.getElementById('reset-simulation').addEventListener('click', () => {
+            if (window.physicsClient) {
+                window.physicsClient.resetSimulation();
+            }
+        });
+
+        document.getElementById('toggle-gravity').addEventListener('click', () => {
+            if (window.physicsClient) {
+                window.physicsClient.toggleGravity();
+            }
+        });
+
+        document.getElementById('add-random-ball').addEventListener('click', () => {
+            if (window.physicsClient) {
+                window.physicsClient.addRandomBall();
+            }
+        });
+
+        // Override console.log to also show in our log display
+        const originalLog = console.log;
+        console.log = function (...args) {
+            originalLog.apply(console, args);
+            addLogMessage(args.join(' '));
+        };
+
+        // Override console.error to also show in our log display
+        const originalError = console.error;
+        console.error = function (...args) {
+            originalError.apply(console, args);
+            addLogMessage('ERROR: ' + args.join(' '));
+        };
+    </script>
+</body>
+
+</html>

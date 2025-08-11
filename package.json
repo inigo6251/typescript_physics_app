@@ -1,0 +1,35 @@
+{
+    "name": "physics-ts",
+    "version": "1.0.0",
+    "description": "Physics TypeScript application built with concept design principles",
+    "main": "example.ts",
+    "scripts": {
+        "start": "deno run --allow-all example.ts",
+        "websocket": "deno run --allow-all websocket-server.ts",
+        "test": "deno test --allow-all",
+        "dev": "deno run --watch --allow-all example.ts",
+        "dev:websocket": "deno run --watch --allow-all websocket-server.ts"
+    },
+    "dependencies": {
+        "physics-engine": "github:Sopiro/Physics (browser-only)"
+    },
+    "devDependencies": {
+        "typescript": "^5.0.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "type": "module",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/yourusername/physics-ts.git"
+    },
+    "keywords": [
+        "physics",
+        "typescript",
+        "concept-design",
+        "synchronization"
+    ],
+    "author": "Your Name",
+    "license": "MIT"
+}
