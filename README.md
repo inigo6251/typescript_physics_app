@@ -1,3 +1,7 @@
+#Typescript Physics simulator app
+This builds on the the (https://github.com/eagonmeng/sync-blank) concept design repository to design a physics simulator app. It uses the typescript physics engine sopiro (https://github.com/Sopiro/Physics) and basic javascript/typescript for the web application.
+
+
 # Concept design: concepts and synchronizations
 
 This repository is a minimal skeleton for building applications using concept
